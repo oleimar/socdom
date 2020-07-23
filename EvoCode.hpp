@@ -52,6 +52,7 @@ public:
     flt s2;                     // SD of increment for 'own perceived quality'
     flt s3;                     // SD of increment for 'displayed quality'
     flt sigma;                  // Parameter for 'relative quality' obs
+    flt sigp;                   // Parameter for 'penalty of AA interaction'
     flt mf1;                    // Memory factor
     flt mf2;                    // Memory factor
     flt pmax;                   // Maximum value for probability to use A
@@ -132,6 +133,7 @@ private:
     flt s2;
     flt s3;
     flt sigma;
+    flt sigp;
     flt mf1;
     flt mf2;
     flt pmax;

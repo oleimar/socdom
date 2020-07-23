@@ -87,6 +87,7 @@ public:
                  flt a_V,
                  flt a_C,
                  flt a_sigma,
+                 flt a_sigp,
                  flt a_mf1,
                  flt a_mf2,
                  flt a_pmax,
@@ -103,10 +104,10 @@ public:
 private:
     void Forget(unsigned i, unsigned j, unsigned tstep);
     // value of perceived penalty in AA interaction between i and j
-    flt ce(flt qi, flt qj) { return C*std::exp(-qi + qj); }
+    flt ce(flt qi, flt qj, flt eq) { return C*std::exp(-qi + qj + eq); }
     flt Clamp(flt p)
         {return (p > pmax) ? pmax : ((p < 1 - pmax) ? 1 - pmax : p); }
-    flt R(unsigned i, unsigned j, unsigned ui, unsigned uj);
+    flt R(unsigned i, unsigned j, unsigned ui, unsigned uj, flt eq);
     void Update_payoffs(unsigned i, unsigned j,
                         unsigned ui, unsigned uj, flt val);
     void Update_w(unsigned i, unsigned j, flt xi_ij, flt deltaij);
@@ -129,6 +130,7 @@ private:
     flt V;           // payoff parameter
     flt C;           // payoff parameter
     flt sigma;       // SD error parameter for 'relative quality' observation
+    flt sigp;        // SD error parameter for 'penalty of AA interaction'
     flt mf1;         // memory factor
     flt mf2;         // memory factor
     flt pmax;        // maximum value for probability to use A
@@ -151,6 +153,7 @@ ActCritGroup<PhenType>::ActCritGroup(unsigned a_gs,
     flt a_V,
     flt a_C,
     flt a_sigma,
+    flt a_sigp,
     flt a_mf1,
     flt a_mf2,
     flt a_pmax,
@@ -169,6 +172,7 @@ ActCritGroup<PhenType>::ActCritGroup(unsigned a_gs,
     V{a_V},
     C{a_C},
     sigma{a_sigma},
+    sigp{a_sigp},
     mf1{a_mf1},
     mf2{a_mf2},
     pmax{a_pmax},
@@ -191,6 +195,7 @@ void ActCritGroup<PhenType>::Interact(rand_eng& eng)
     rand_uni uni(0, 1);
     rand_int uri(0, gs - 1);
     rand_norm eps(0, sigma);
+    rand_norm eqd(0, sigp);
     // set payoff values to zero at start of generation
     for (auto& m : memb) {
         m.payoff = 0;
@@ -232,8 +237,8 @@ void ActCritGroup<PhenType>::Interact(rand_eng& eng)
             mi.nAA += 1;
             mj.nAA += 1;
         }
-        flt Rij = R(i, j, ui, uj);
-        flt Rji = R(j, i, uj, ui);
+        flt Rij = R(i, j, ui, uj, eqd(eng));
+        flt Rji = R(j, i, uj, ui, eqd(eng));
         // perform payoff increments
         flt val = (tstep >= tau) ? V : 0;
         Update_payoffs(i, j, ui, uj, val);
@@ -348,13 +353,13 @@ void ActCritGroup<PhenType>::Forget(unsigned i, unsigned j, unsigned tstep)
 template<typename PhenType>
 typename ActCritGroup<PhenType>::flt
 ActCritGroup<PhenType>::R(unsigned i, unsigned j,
-                          unsigned ui, unsigned uj)
+                          unsigned ui, unsigned uj, flt eq)
 {
     phen_type& mi = memb[i];
     phen_type& mj = memb[j];
     if (ui == 1) {
         if (uj == 1) {
-            return mi.v - ce(mi.q, mj.q);
+            return mi.v - ce(mi.q, mj.q, eq);
         } else {
             return mi.v;
         }
@@ -373,8 +378,8 @@ void ActCritGroup<PhenType>::Update_payoffs(unsigned i, unsigned j,
     mj.payoff += V0;
     if (ui == 1) {
         if (uj == 1) {
-            mi.payoff -= ce(mi.q, mj.q);
-            mj.payoff -= ce(mj.q, mi.q);
+            mi.payoff -= ce(mi.q, mj.q, 0);
+            mj.payoff -= ce(mj.q, mi.q, 0);
         } else {
             mi.payoff += val;
         }

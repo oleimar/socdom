@@ -74,6 +74,7 @@ EvoInpData::EvoInpData(const char* filename) :
     Get(idat, s2, "s2");
     Get(idat, s3, "s3");
     Get(idat, sigma, "sigma");
+    Get(idat, sigp, "sigp");
     Get(idat, mf1, "mf1");
     Get(idat, mf2, "mf2");
     Get(idat, pmax, "pmax");
@@ -133,6 +134,7 @@ Evo::Evo(const EvoInpData& eid) :
     s2{static_cast<flt>(id.s2)},
     s3{static_cast<flt>(id.s3)},
     sigma{static_cast<flt>(id.sigma)},
+    sigp{static_cast<flt>(id.sigp)},
     mf1{static_cast<flt>(id.mf1)},
     mf2{static_cast<flt>(id.mf2)},
     pmax{static_cast<flt>(id.pmax)},
@@ -288,7 +290,7 @@ void Evo::Run()
                         // final generation, compute empirical score data
                         empi = true;
                     }
-                    acg_type acg(gs, n, gnum, T, tau, V0, V, C, sigma,
+                    acg_type acg(gs, n, gnum, T, tau, V0, V, C, sigma, sigp,
                                  mf1, mf2, pmax, alphahat, betahat, phen,
                                  numby, lhist, empi);
                     acg.Interact(eng);
